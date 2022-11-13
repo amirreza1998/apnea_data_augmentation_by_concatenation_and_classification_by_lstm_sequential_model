@@ -8,3 +8,8 @@ C3A2_data
 C4A1_data
 ECG_data
 SpO2_data
+
+#classification with lstm 
+load database and create pkl database for each user with below path:
+case_name -> type_of_apnea or normal -> type_of_data(C3A2_data,C4A1_data,ECG_data,SpO2_data) -> list_of_data
+#classification with lstm 
