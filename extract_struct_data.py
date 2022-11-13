@@ -1,6 +1,6 @@
 import pyedflib
 import numpy as np
-def extract_data(edf_path, time_len=20):
+def extract_data(edf_path, case_name, time_len=20):
     f = pyedflib.EdfReader(edf_path) 
     n = f.signals_in_file
     print(f"number of datas:{n}")
@@ -26,12 +26,12 @@ def extract_data(edf_path, time_len=20):
 
 
     ### read stage and respevt txt version file to get information of time and label
-    with open('/content/vinsent_database/files/ucddb002_stage.txt') as in_stage:
+    with open(f'/content/vinsent_database/files/{case_name}_stage.txt') as in_stage:
         stage = in_stage.readlines()
     for i in range(len(stage)):
         stage[i] = int(stage[i].replace("\n",""))
     print(len(stage))
-    with open('/content/vinsent_database/files/ucddb002_respevt.txt') as in_respevt:
+    with open(f'/content/vinsent_database/files/{case_name}_respevt.txt') as in_respevt:
         stage = in_respevt.readlines()
     stage_pure = stage[3:-1]
     print(len(stage_pure))
@@ -60,6 +60,7 @@ def extract_data(edf_path, time_len=20):
     from datetime import datetime,timedelta
     dict_of_apnea_time = dict()
     i = 0
+    [stage_pure.pop(i) for i in range(len(stage_pure)).__reversed__() if 'EVENT' in stage_pure[i]]
     for i in range(len(stage_pure)):
         time_start = stage_pure[i][0]
         time_start_datetime_apnea = datetime.strptime(time_start,"%H:%M:%S")
@@ -87,11 +88,11 @@ def extract_data(edf_path, time_len=20):
     all_apnea_time = []
     for item in list(dict_of_apnea_time.keys()):
         all_apnea_time.extend(dict_of_apnea_time[item])
-
-    for i in range(len(all_apnea_time)):
-        all_apnea_time[i] = [all_apnea_time[i][0],all_apnea_time[i][0] + int(all_apnea_time[i][1])]
+        for i in range(len(all_apnea_time)):
+            all_apnea_time[i] = [all_apnea_time[i][0],all_apnea_time[i][0] + int(all_apnea_time[i][1])]
 
     all_apnea_time = sorted(all_apnea_time, key=lambda x: x[0])
+
 
 
 
@@ -169,17 +170,19 @@ def extract_data(edf_path, time_len=20):
                 # generate_constant_time_dataset[type]["C4A1_data"] = [dict_of_apnea_data_continuous[type]["C4A1_data"][iteration*time_len*C4A1_frequency:(iteration+1)*time_len*C4A1_frequency]]
                 # generate_constant_time_dataset[type]["ECG_data"] = [dict_of_apnea_data_continuous[type]["ECG_data"][iteration*time_len*ECG_frequency:(iteration+1)*time_len*ECG_frequency]]
                 # generate_constant_time_dataset[type]["SpO2_data"] = [dict_of_apnea_data_continuous[type]["SpO2_data"][iteration*time_len*SpO2_frequency:(iteration+1)*time_len*SpO2_frequency]]
-                generate_constant_time_dataset[type] = {
-                    "C3A2_data" : [dict_of_apnea_data_continuous[type]["C3A2_data"][iteration*time_len*C3A2_frequency:(iteration+1)*time_len*C3A2_frequency]],
-                    "C4A1_data" : [dict_of_apnea_data_continuous[type]["C4A1_data"][iteration*time_len*C4A1_frequency:(iteration+1)*time_len*C4A1_frequency]],
-                    "ECG_data" : [dict_of_apnea_data_continuous[type]["ECG_data"][iteration*time_len*ECG_frequency:(iteration+1)*time_len*ECG_frequency]],
-                    "SpO2_data" : [dict_of_apnea_data_continuous[type]["SpO2_data"][iteration*time_len*SpO2_frequency:(iteration+1)*time_len*SpO2_frequency]],
-                }
+                if len(dict_of_apnea_data_continuous[type]["C3A2_data"]) >= (iteration+1)*time_len*C3A2_frequency:
+                    generate_constant_time_dataset[type] = {
+                        "C3A2_data" : [dict_of_apnea_data_continuous[type]["C3A2_data"][iteration*time_len*C3A2_frequency:(iteration+1)*time_len*C3A2_frequency]],
+                        "C4A1_data" : [dict_of_apnea_data_continuous[type]["C4A1_data"][iteration*time_len*C4A1_frequency:(iteration+1)*time_len*C4A1_frequency]],
+                        "ECG_data" : [dict_of_apnea_data_continuous[type]["ECG_data"][iteration*time_len*ECG_frequency:(iteration+1)*time_len*ECG_frequency]],
+                        "SpO2_data" : [dict_of_apnea_data_continuous[type]["SpO2_data"][iteration*time_len*SpO2_frequency:(iteration+1)*time_len*SpO2_frequency]],
+                    }
             elif type in list(generate_constant_time_dataset.keys()):
-                generate_constant_time_dataset[type]["C3A2_data"].append(dict_of_apnea_data_continuous[type]["C3A2_data"][iteration*time_len*C3A2_frequency:(iteration+1)*time_len*C3A2_frequency])
-                generate_constant_time_dataset[type]["C4A1_data"].append(dict_of_apnea_data_continuous[type]["C4A1_data"][iteration*time_len*C4A1_frequency:(iteration+1)*time_len*C4A1_frequency])
-                generate_constant_time_dataset[type]["ECG_data"].append(dict_of_apnea_data_continuous[type]["ECG_data"][iteration*time_len*ECG_frequency:(iteration+1)*time_len*ECG_frequency])
-                generate_constant_time_dataset[type]["SpO2_data"].append(dict_of_apnea_data_continuous[type]["SpO2_data"][iteration*time_len*SpO2_frequency:(iteration+1)*time_len*SpO2_frequency])
+                if len(dict_of_apnea_data_continuous[type]["C3A2_data"]) >= (iteration+1)*time_len*C3A2_frequency:
+                    generate_constant_time_dataset[type]["C3A2_data"].append(dict_of_apnea_data_continuous[type]["C3A2_data"][iteration*time_len*C3A2_frequency:(iteration+1)*time_len*C3A2_frequency])
+                    generate_constant_time_dataset[type]["C4A1_data"].append(dict_of_apnea_data_continuous[type]["C4A1_data"][iteration*time_len*C4A1_frequency:(iteration+1)*time_len*C4A1_frequency])
+                    generate_constant_time_dataset[type]["ECG_data"].append(dict_of_apnea_data_continuous[type]["ECG_data"][iteration*time_len*ECG_frequency:(iteration+1)*time_len*ECG_frequency])
+                    generate_constant_time_dataset[type]["SpO2_data"].append(dict_of_apnea_data_continuous[type]["SpO2_data"][iteration*time_len*SpO2_frequency:(iteration+1)*time_len*SpO2_frequency])
             iteration = iteration + 1
 
 
